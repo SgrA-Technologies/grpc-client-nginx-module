@@ -26,11 +26,6 @@ description = {
     maintainer = "Yuansheng Wang <membphis@gmail.com>"
 }
 
-dependencies = {
-    "lua-protobuf = 0.3.4",
-}
-
-
 build = {
     type = "builtin",
     modules = {

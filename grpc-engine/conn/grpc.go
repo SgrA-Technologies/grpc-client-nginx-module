@@ -29,9 +29,9 @@ import (
 )
 
 const (
-	ClientStream        int = 1
-	ServerStream            = 2
-	BidirectionalStream     = 3
+	ClientStream        = 1
+	ServerStream        = 2
+	BidirectionalStream = 3
 )
 
 type ConnectOption struct {
@@ -48,13 +48,10 @@ type CallOption struct {
 }
 
 func Connect(target string, opt *ConnectOption) (*grpc.ClientConn, error) {
-	opts := []grpc.DialOption{
-		// connect timeout
-		grpc.WithTimeout(60 * time.Second),
-	}
+	opts := []grpc.DialOption{}
 
 	if opt.MaxRecvMsgSize != 0 {
-		opts = append(opts, grpc.WithMaxMsgSize(opt.MaxRecvMsgSize))
+		opts = append(opts, grpc.WithDefaultCallOptions(grpc.MaxCallRecvMsgSize(opt.MaxRecvMsgSize)))
 	}
 	if opt.Insecure {
 		opts = append(opts, grpc.WithTransportCredentials(insecure.NewCredentials()))
@@ -72,20 +69,21 @@ func Connect(target string, opt *ConnectOption) (*grpc.ClientConn, error) {
 		if err != nil {
 			return nil, err
 		}
-		if opt.TrustedCA != "" {
-			// Load the CA certificate
-			trustedCA, err := os.ReadFile(opt.TrustedCA)
-			if err != nil {
-				return nil, err
-			}
-			// Put the CA certificate to certificate pool
-			caPool := x509.NewCertPool()
-			if !caPool.AppendCertsFromPEM(trustedCA) {
-				return nil, fmt.Errorf("failed to append trusted certificate to certificate pool. %s", trustedCA)
-			}
-			tc.RootCAs = caPool
-		}
 		tc.Certificates = []tls.Certificate{tlsCert}
+	}
+
+	if opt.TrustedCA != "" {
+		// Load the CA certificate
+		trustedCA, err := os.ReadFile(opt.TrustedCA)
+		if err != nil {
+			return nil, err
+		}
+		// Put the CA certificate to certificate pool
+		caPool := x509.NewCertPool()
+		if !caPool.AppendCertsFromPEM(trustedCA) {
+			return nil, fmt.Errorf("failed to append trusted certificate to certificate pool. %s", trustedCA)
+		}
+		tc.RootCAs = caPool
 	}
 
 	opts = append(opts, grpc.WithTransportCredentials(credentials.NewTLS(tc)))
