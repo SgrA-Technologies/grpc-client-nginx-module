@@ -126,7 +126,7 @@ local gRPCServerStreamType = 2
 local gRPCBidirectionalStreamType = 3
 
 
-function _M.load(def, proto_type, options)
+function _M.load(def, proto_type, protoc_options, pb_options)
     local old_state
     if not protoc_inst then
         -- initialize protoc compiler
@@ -136,13 +136,19 @@ function _M.load(def, proto_type, options)
         protoc_inst = protoc.new()
         protoc_inst.index = {}
 
-        protoc.unknown_type = options.unknown_type
-        protoc.unknown_import = options.unknown_import
-        for k, v in pairs(options or {}) do
+        protoc.unknown_type = protoc_options.unknown_type
+        protoc.unknown_import = protoc_options.unknown_import
+        for k, v in pairs(protoc_options or {}) do
             protoc_inst[k] = v
         end
     else
         old_state = pb.state(current_pb_state)
+    end
+
+    if pb_options and type(pb_options) == "table" then
+        for _, option in pairs(pb_options) do
+            pb.option(option)
+        end
     end
 
     if not proto_type then
