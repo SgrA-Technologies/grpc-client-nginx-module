@@ -24,6 +24,7 @@ typedef struct DialOpt {
     bool                     insecure;
     bool                     tls_verify;
     int                      max_recv_msg_size;
+    int                      max_send_msg_size;
     int                      client_cert_len;
     char                    *client_cert;
     int                      client_key_len;
@@ -33,18 +34,18 @@ typedef struct DialOpt {
 } DialOpt;
 
 typedef struct Metadata {
-	int		key_len;
-	int		value_len;
-	char   *key;
-	char   *value;
+    int                      key_len;
+    int                      value_len;
+    char                    *key;
+    char                    *value;
 } Metadata;
 
 typedef uintptr_t ngx_msec_t;
 typedef struct CallOpt {
-    ngx_msec_t timeout;
+    ngx_msec_t               timeout;
 
-	int		   metadata_len;
-	Metadata  *metadata;
+    int                      metadata_len;
+    Metadata                *metadata;
 } CallOpt;
 */
 import "C"
@@ -70,7 +71,7 @@ func init() {
 	// only keep the latest debug log
 	f, err := os.OpenFile("/tmp/grpc-engine-debug.log", os.O_WRONLY|os.O_CREATE|os.O_TRUNC, 0644)
 	if err != nil {
-		log.Printf(err.Error())
+		log.Print(err.Error())
 		return
 	}
 	log.Default().SetOutput(f)
@@ -125,6 +126,7 @@ func grpc_engine_connect(errBuf unsafe.Pointer, errLen *C.size_t,
 		Insecure:       bool(opt.insecure),
 		TLSVerify:      bool(opt.tls_verify),
 		MaxRecvMsgSize: int(opt.max_recv_msg_size),
+		MaxSendMsgSize: int(opt.max_send_msg_size),
 		ClientCertFile: C.GoStringN(opt.client_cert, opt.client_cert_len),
 		ClientKeyFile:  C.GoStringN(opt.client_key, opt.client_key_len),
 		TrustedCA:      C.GoStringN(opt.trusted_ca, opt.trusted_ca_len),

@@ -27,7 +27,7 @@ description = {
 }
 
 dependencies = {
-    "lua-protobuf = 0.3.4",
+    "lua-protobuf = 0.5.0-1",
 }
 
 

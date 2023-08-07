@@ -30,6 +30,7 @@ typedef struct DialOpt {
     bool                     insecure;
     bool                     tls_verify;
     int                      max_recv_msg_size;
+    int                      max_send_msg_size;
     int                      client_cert_len;
     char                    *client_cert;
     int                      client_key_len;
@@ -136,7 +137,7 @@ local gRPCServerStreamType = 2
 local gRPCBidirectionalStreamType = 3
 
 
-function _M.load(def, proto_type)
+function _M.load(def, proto_type, options)
     local old_state
     if not protoc_inst then
         -- initialize protoc compiler
@@ -144,6 +145,13 @@ function _M.load(def, proto_type)
         protoc.reload()
         protoc_inst = protoc.new()
         protoc_inst.index = {}
+        options = options or {}
+        for k, v in pairs(options.protoc or {}) do
+            protoc_inst[k] = v
+        end
+        for _, v in ipairs(options.pb or {}) do
+            pb.option(v)
+        end
     else
         old_state = pb.state(current_pb_state)
     end
@@ -236,6 +244,16 @@ function _M.connect(target, opt)
         end
     else
         opt_ptr.max_recv_msg_size = 0
+    end
+
+    if opt.max_send_msg_size then
+        if opt.max_send_msg_size > MAX_INIT32 then
+            opt_ptr.max_send_msg_size = MAX_INIT32
+        else
+            opt_ptr.max_send_msg_size = opt.max_send_msg_size
+        end
+    else
+        opt_ptr.max_send_msg_size = 0
     end
 
     if (opt.client_cert == nil ) ~= (opt.client_key == nil) then
